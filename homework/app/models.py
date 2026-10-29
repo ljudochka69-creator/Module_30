@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship, DeclarativeBase
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 
 class Base(DeclarativeBase):
@@ -8,11 +8,14 @@ class Base(DeclarativeBase):
 
 class Recipe(Base):
     """Модель рецепта."""
+
     __tablename__ = "recipes"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, index=True, comment="Название блюда")
-    cooking_time = Column(Integer, nullable=False, comment="Время приготовления в минутах")
+    cooking_time = Column(
+        Integer, nullable=False, comment="Время приготовления в минутах"
+    )
     description = Column(Text, nullable=False, comment="Текстовое описание рецепта")
     views = Column(Integer, default=0, nullable=False, comment="Количество просмотров")
 
@@ -26,11 +29,16 @@ class Recipe(Base):
 
 class Ingredient(Base):
     """Модель ингредиента."""
+
     __tablename__ = "ingredients"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, comment="Название ингредиента")
-    quantity = Column(String(100), nullable=False, comment="Количество, например '2 стакана'")
-    recipe_id = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
+    quantity = Column(
+        String(100), nullable=False, comment="Количество, например '2 стакана'"
+    )
+    recipe_id = Column(
+        Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False
+    )
 
     recipe = relationship("Recipe", back_populates="ingredients")

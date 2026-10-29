@@ -1,13 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import List
 
+import models
+import schemas
+from database import async_session, engine
 from fastapi import FastAPI, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-
-import models
-import schemas
-from database import engine, async_session
 
 
 @asynccontextmanager
@@ -22,8 +21,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Кулинарная книга",
     description="API для управления рецептами. "
-               "Список рецептов сортируется по популярности (просмотры) "
-               "и времени приготовления.",
+    "Список рецептов сортируется по популярности (просмотры) "
+    "и времени приготовления.",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -43,9 +42,8 @@ async def get_recipes() -> List[schemas.RecipeShort]:
     при равенстве — по возрастанию времени приготовления.
     """
     async with async_session() as s:
-        stmt = (
-            select(models.Recipe)
-            .order_by(models.Recipe.views.desc(), models.Recipe.cooking_time.asc())
+        stmt = select(models.Recipe).order_by(
+            models.Recipe.views.desc(), models.Recipe.cooking_time.asc()
         )
         result = await s.execute(stmt)
         recipes = result.scalars().all()
@@ -87,7 +85,12 @@ async def get_recipe(recipe_id: int) -> schemas.RecipeDetail:
         return schemas.RecipeDetail.model_validate(recipe)
 
 
-@app.post("/recipes", response_model=schemas.RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"])
+@app.post(
+    "/recipes",
+    response_model=schemas.RecipeDetail,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Recipes"],
+)
 async def create_recipe(recipe: schemas.RecipeCreate) -> schemas.RecipeDetail:
     """
     Создать новый рецепт.
@@ -115,8 +118,9 @@ async def create_recipe(recipe: schemas.RecipeCreate) -> schemas.RecipeDetail:
         await s.refresh(new_recipe)
 
         return schemas.RecipeDetail.model_validate(new_recipe)
-    
-    
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)    
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

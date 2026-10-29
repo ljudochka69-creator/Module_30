@@ -1,0 +1,37 @@
+stages:
+  - lint
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+lint:
+  stage: lint
+  image: python:3.9
+  before_script:
+    - apt-get update && apt-get install -y gcc
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - black --check .
+    - isort --check-only .
+    - flake8 .
+    - mypy .
+  rules:
+    - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_ID
+
+test:
+  stage: test
+  image: python:3.9
+  before_script:
+    - apt-get update && apt-get install -y gcc
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - pytest
+  rules:
+    - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_ID
