@@ -18,8 +18,6 @@ class IngredientBase(BaseModel):
 class IngredientIn(IngredientBase):
     """Схема для создания ингредиента (приходит в запросе)."""
 
-    ...
-
 
 class IngredientOut(IngredientBase):
     """Схема для возврата ингредиента (с id)."""
@@ -32,10 +30,21 @@ class IngredientOut(IngredientBase):
 class RecipeBase(BaseModel):
     """Базовая схема рецепта."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Название блюда")
-    cooking_time: int = Field(..., gt=0, description="Время приготовления в минутах")
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Название блюда",
+    )
+    cooking_time: int = Field(
+        ...,
+        gt=0,
+        description="Время приготовления в минутах",
+    )
     description: str = Field(
-        ..., min_length=1, description="Текстовое описание рецепта"
+        ...,
+        min_length=1,
+        description="Текстовое описание рецепта",
     )
 
 
@@ -43,7 +52,9 @@ class RecipeCreate(RecipeBase):
     """Схема для создания рецепта (POST-запрос)."""
 
     ingredients: list[IngredientIn] = Field(
-        ..., min_length=1, description="Список ингредиентов"
+        ...,
+        min_length=1,
+        description="Список ингредиентов",
     )
 
 
@@ -66,6 +77,9 @@ class RecipeDetail(BaseModel):
     cooking_time: int = Field(..., description="Время приготовления в минутах")
     description: str = Field(..., description="Текстовое описание рецепта")
     views: int = Field(..., description="Количество просмотров")
-    ingredients: list[IngredientOut] = Field(..., description="Список ингредиентов")
+    ingredients: list[IngredientOut] = Field(
+        ...,
+        description="Список ингредиентов",
+    )
 
     model_config = {"from_attributes": True}

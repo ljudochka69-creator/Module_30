@@ -3,4 +3,13 @@ uvicorn[standard]==0.15.0
 sqlalchemy==1.4.26
 aiosqlite==0.17.0
 greenlet==1.1.2
-flake8
+uvicorn
+httpx
+httpx[asyncio]
+pytest
+pytest-asyncio
+aiosqlite
+python-dotenv
+pydantic
+types-uvicorn
+types-httpx

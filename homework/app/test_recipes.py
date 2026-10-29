@@ -1,15 +1,11 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient, ASGITransport
+
 from main import app
 
 
-@pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.mark.anyio
-async def test_create_recipe():
+@pytest.mark.asyncio
+async def test_create_recipe(client: AsyncClient) -> None:
     """Создание рецепта — POST /recipes."""
     payload = {
         "name": "Борщ",
@@ -33,7 +29,7 @@ async def test_create_recipe():
 
 
 @pytest.mark.anyio
-async def test_get_recipe_increments_views():
+async def test_get_recipe_increments_views() -> None:
     """Открытие детального рецепта увеличивает просмотры."""
     payload = {
         "name": "Паста Карбонара",
@@ -55,7 +51,7 @@ async def test_get_recipe_increments_views():
 
 
 @pytest.mark.anyio
-async def test_get_recipe_not_found():
+async def test_get_recipe_not_found() -> None:
     """Запрос несуществующего рецепта — 404."""
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -65,8 +61,10 @@ async def test_get_recipe_not_found():
 
 
 @pytest.mark.anyio
-async def test_recipe_list_sorted_by_views():
-    """Список рецептов отсортирован по просмотрам (убывание), затем по времени."""
+async def test_recipe_list_sorted_by_views() -> None:
+    """
+    Список рецептов отсортирован по просмотрам (убывание), затем по времени.
+    """
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:

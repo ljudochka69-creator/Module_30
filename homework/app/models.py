@@ -12,12 +12,18 @@ class Recipe(Base):
     __tablename__ = "recipes"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False, index=True, comment="Название блюда")
+    name = Column(
+        String(255), nullable=False, index=True, comment="Название блюда"
+    )
     cooking_time = Column(
         Integer, nullable=False, comment="Время приготовления в минутах"
     )
-    description = Column(Text, nullable=False, comment="Текстовое описание рецепта")
-    views = Column(Integer, default=0, nullable=False, comment="Количество просмотров")
+    description = Column(
+        Text, nullable=False, comment="Текстовое описание рецепта"
+    )
+    views = Column(
+        Integer, default=0, nullable=False, comment="Количество просмотров"
+    )
 
     ingredients = relationship(
         "Ingredient",

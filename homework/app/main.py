@@ -1,35 +1,44 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import List
 
 import models
 import schemas
-from database import async_session, engine
-from fastapi import FastAPI, HTTPException, status
+import uvicorn
+from database import SessionLocal, engine
+from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+from database import get_session
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Создаёт таблицы при старте, закрывает соединение при остановке."""
-    async with engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
+    async with get_session() as session:
+        await session.run_sync(models.Base.metadata.create_all)
     yield
     await engine.dispose()
 
 
 app = FastAPI(
     title="Кулинарная книга",
-    description="API для управления рецептами. "
-    "Список рецептов сортируется по популярности (просмотры) "
-    "и времени приготовления.",
+    description=(
+        "API для управления рецептами. "
+        "Список рецептов сортируется по популярности (просмотры) "
+        "и времени приготовления."
+    ),
     version="1.0.0",
     lifespan=lifespan,
 )
 
 
-@app.get("/recipes", response_model=List[schemas.RecipeShort], tags=["Recipes"])
-async def get_recipes() -> List[schemas.RecipeShort]:
+@app.get(
+    "/recipes", response_model=list[schemas.RecipeShort], tags=["Recipes"]
+)
+async def get_recipes(
+    db: AsyncSession = Depends(get_session)
+    ) -> list[schemas.RecipeShort]:
     """
     Получить список всех рецептов.
 
@@ -41,16 +50,22 @@ async def get_recipes() -> List[schemas.RecipeShort]:
     **Сортировка:** по убыванию количества просмотров (популярные первыми),
     при равенстве — по возрастанию времени приготовления.
     """
-    async with async_session() as s:
+
+    async with SessionLocal() as s:
         stmt = select(models.Recipe).order_by(
-            models.Recipe.views.desc(), models.Recipe.cooking_time.asc()
+            models.Recipe.views.desc(),
+            models.Recipe.cooking_time.asc(),
         )
         result = await s.execute(stmt)
         recipes = result.scalars().all()
         return [schemas.RecipeShort.model_validate(r) for r in recipes]
 
 
-@app.get("/recipes/{recipe_id}", response_model=schemas.RecipeDetail, tags=["Recipes"])
+@app.get(
+    "/recipes/{recipe_id}",
+    response_model=schemas.RecipeDetail,
+    tags=["Recipes"],
+)
 async def get_recipe(recipe_id: int) -> schemas.RecipeDetail:
     """
     Получить детальную информацию о конкретном рецепте.
@@ -63,7 +78,7 @@ async def get_recipe(recipe_id: int) -> schemas.RecipeDetail:
 
     **Побочный эффект:** при каждом вызове увеличивает счётчик просмотров на 1.
     """
-    async with async_session() as s:
+    async with SessionLocal() as s:
         stmt = (
             select(models.Recipe)
             .where(models.Recipe.id == recipe_id)
@@ -103,7 +118,7 @@ async def create_recipe(recipe: schemas.RecipeCreate) -> schemas.RecipeDetail:
 
     Возвращает созданный рецепт с присвоенным id и пустым счётчиком просмотров.
     """
-    async with async_session() as s:
+    async with SessionLocal() as s:
         new_recipe = models.Recipe(
             name=recipe.name,
             cooking_time=recipe.cooking_time,
@@ -121,6 +136,4 @@ async def create_recipe(recipe: schemas.RecipeCreate) -> schemas.RecipeDetail:
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
