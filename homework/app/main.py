@@ -1,7 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-import models
+import .models
 import schemas
 import uvicorn
 from database import SessionLocal, engine
