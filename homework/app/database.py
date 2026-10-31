@@ -14,7 +14,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=True,  # Включаем логирование SQL запросов
     future=True,  # Используем Future-совместимый движок
-    connect_args={"check_same_thread": False}  # Для SQLite
+    connect_args={"check_same_thread": False},  # Для SQLite
 )
 
 # Создаем фабрику сессий
@@ -23,12 +23,14 @@ SessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
     autoflush=False,
-    autocommit=False
+    autocommit=False,
 )
+
 
 # Базовый класс для моделей
 class Base(DeclarativeBase):
     pass
+
 
 # Функция для получения сессии
 async def get_session() -> AsyncSession:
