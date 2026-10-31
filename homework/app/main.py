@@ -33,12 +33,10 @@ app = FastAPI(
 )
 
 
-@app.get(
-    "/recipes", response_model=list[schemas.RecipeShort], tags=["Recipes"]
-)
+@app.get("/recipes", response_model=list[schemas.RecipeShort], tags=["Recipes"])
 async def get_recipes(
-    db: AsyncSession = Depends(get_session)
-    ) -> list[schemas.RecipeShort]:
+    db: AsyncSession = Depends(get_session),
+) -> list[schemas.RecipeShort]:
     """
     Получить список всех рецептов.
 
