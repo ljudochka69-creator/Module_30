@@ -1,16 +1,12 @@
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-import pytest
-import asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-from app.database import Base, engine as original_engine
-from app.main import app
 import os
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.database import Base
+from app.main import app
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_recipes.db"
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
