@@ -15,8 +15,8 @@ from database import get_session
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Создаёт таблицы при старте, закрывает соединение при остановке."""
-    async with get_session() as session:
-        await session.run_sync(models.Base.metadata.create_all)
+    async with engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)
     yield
     await engine.dispose()
 
