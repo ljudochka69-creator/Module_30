@@ -1,15 +1,14 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-import .models
-import schemas
 import uvicorn
-from database import SessionLocal, engine
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_session
+from sqlalchemy.orm import selectinload
+
+from . import models, schemas
+from .database import SessionLocal, engine, get_session
 
 
 @asynccontextmanager

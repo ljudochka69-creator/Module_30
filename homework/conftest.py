@@ -1,61 +1,33 @@
-import os
 from collections.abc import AsyncGenerator
 
-import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import Base
+from app.database import SessionLocal, engine
 from app.main import app
-
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_recipes.db"
-test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
-TestSessionLocal = async_sessionmaker(
-    bind=test_engine, class_=AsyncSession, expire_on_commit=False
-)
+from app.models import Base
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(autouse=True)
 async def setup_test_db() -> AsyncGenerator[None, None]:
-    print("Creating test database...")
-    async with test_engine.begin() as conn:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    print("Test database created")
     yield
-    if os.path.exists("./test_recipes.db"):
-        print("Removing test database")
-        os.remove("./test_recipes.db")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(setup_test_db: None) -> AsyncGenerator[AsyncClient, None]:
-    import app.main as main_module
-
-    original_get_session = main_module.get_session
-
-    try:
-
-        async def mock_get_session() -> AsyncGenerator[AsyncSession, None]:
-            async with TestSessionLocal() as session:
-                yield session
-
-        main_module.get_session = mock_get_session
-
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            yield client
-    finally:
-        main_module.get_session = original_get_session
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
 
 
-@pytest.fixture
-async def db_session(
-    setup_test_db: None,
-) -> AsyncGenerator[AsyncSession, None]:
-    async with TestSessionLocal() as session:
+@pytest_asyncio.fixture
+async def db_session(setup_test_db: None) -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
         yield session

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -17,7 +17,9 @@ class Recipe(Base):
         Integer, nullable=False, comment="Время приготовления в минутах"
     )
     description = Column(Text, nullable=False, comment="Текстовое описание рецепта")
-    views = Column(Integer, default=0, nullable=False, comment="Количество просмотров")
+    views: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, comment="Количество просмотров"
+    )
 
     ingredients = relationship(
         "Ingredient",
