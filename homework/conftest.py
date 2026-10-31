@@ -1,26 +1,26 @@
+import os
+from collections.abc import AsyncGenerator
+
+import pytest
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-import pytest
-import asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-from app.database import Base, engine as original_engine
+
+from app.database import Base
 from app.main import app
-import os
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_recipes.db"
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
-TestSessionLocal = sessionmaker(
+TestSessionLocal = async_sessionmaker(
     bind=test_engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
 @pytest.fixture(scope="session")
-async def setup_test_db():
+async def setup_test_db() -> AsyncGenerator[None, None]:
     print("Creating test database...")
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -32,14 +32,14 @@ async def setup_test_db():
 
 
 @pytest.fixture
-async def client(setup_test_db):
+async def client(setup_test_db: None) -> AsyncGenerator[AsyncClient, None]:
     import app.main as main_module
 
     original_get_session = main_module.get_session
 
     try:
 
-        async def mock_get_session():
+        async def mock_get_session() -> AsyncGenerator[AsyncSession, None]:
             async with TestSessionLocal() as session:
                 yield session
 
@@ -54,6 +54,8 @@ async def client(setup_test_db):
 
 
 @pytest.fixture
-async def db_session(setup_test_db):
+async def db_session(
+    setup_test_db: None,
+) -> AsyncGenerator[AsyncSession, None]:
     async with TestSessionLocal() as session:
         yield session
