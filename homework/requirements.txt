@@ -11,5 +11,3 @@ pytest-asyncio
 aiosqlite
 python-dotenv
 pydantic
-types-uvicorn
-types-httpx
